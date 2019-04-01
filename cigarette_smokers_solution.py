@@ -1,14 +1,11 @@
-from threading import Semaphore
+import threading
 import random
-import multiprocessing
 
-num_smokers = 3
-
-mutex = Semaphore(1)
-smoker_match = Semaphore(0)
-smoker_paper = Semaphore(0)
-smoker_tobacco = Semaphore(0)
-agent = Semaphore(0) 
+mutex = threading.Semaphore(1)
+smoker_match = threading.Semaphore(0)
+smoker_paper = threading.Semaphore(0)
+smoker_tobacco = threading.Semaphore(0)
+agent = threading.Semaphore(0) 
 
 def Agent():
 	while True:
@@ -26,29 +23,41 @@ def Agent():
 		mutex.release()
 		agent.acquire()
 
-def Smoker(smoker_id):
+def Smoker1():
+	while True:
+		smoker_match.acquire()
+		mutex.acquire()
+		print('Smoker1 picks up tobacco and paper')
+		agent.release()
+		mutex.release()
+		print('Smoker1 smokes....')
+
+def Smoker2():
+	while True:
+		smoker_paper.acquire()
+		mutex.acquire()
+		print('Smoker2 picks up tobacco and match')
+		agent.release()
+		mutex.release()
+		print('Smoker2 smokes....')
+
+def Smoker3():
 	while True:
 		smoker_tobacco.acquire()
 		mutex.acquire()
-		print('Smoker' + str(smoker_id) + ' picks up match and paper')
+		print('Smoker3 picks up match and paper')
 		agent.release()
 		mutex.release()
-		print('Smoker' + str(smoker_id) + ' smokes')
+		print('Smoker3 smokes....')
 
-process_queue = []
+agent_thread = threading.Thread(target=Agent)
+smoker1_thread = threading.Thread(target=Smoker1)
+smoker2_thread = threading.Thread(target=Smoker2)
+smoker3_thread = threading.Thread(target=Smoker3)
 
-proc = multiprocessing.Process(target=Agent)
-process_queue.append(proc)
-
-for i in range(0,num_smokers):
-	proc = multiprocessing.Process(target=Smoker,args=(int(i+1),))
-	process_queue.append(proc)
-
-for process in process_queue:
-	process.start()
-
-for process in process_queue:
-	process.join()
-
+smoker1_thread.start()
+smoker2_thread.start()
+agent_thread.start()
+smoker3_thread.start()
 
 
